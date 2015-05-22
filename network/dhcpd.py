@@ -105,7 +105,7 @@ def main():
                                 ['key_name', 'key_secret']
                             ],
         required_one_of = [
-                                ['mac_address', 'ip_address'].
+                                ['mac_address', 'ip_address'],
                                 ['gather_facts', 'state']
                           ],
         supports_check_mode=False
