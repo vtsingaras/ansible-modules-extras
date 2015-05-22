@@ -31,10 +31,15 @@ requirements:
 options:
     state:
         description:
-            - If state is ommited then lookup a lease and return as a fact, else perform the respective operation
+            - Desired add/remove operation. 'present' for adding a new host entry and 'absent' fo tremoving one by it's IP or Hardware address.
+        required: false
+        default: present
+        choices: [present, absent]
+    gather_facts:
+        description:
+            - If set to true query the DHCP server for the specified IP or Hardware address and return the lease-pair as an Ansible fact.
         required: false
         default: null
-        choices: [present, absent]
     mac_address:
         description:
             - Target MAC address, if ommited ip_address must be supplied
@@ -73,7 +78,7 @@ EXAMPLES = '''
 # Remove a host object entry in dhcpd.leases by its mac address
 - dhcpd: state=absent mac_address=13:37:be:ef:00:00 server=dhcp.example.org
 # Lookup a lease by its IP address, its ip and mac addresses will be registered as dhcp_mac and dhcp_ip
-- dhcpd: ip_address=10.0.0.10 server=dhcp.example.org
+- dhcpd: gather_facts=true ip_address=10.0.0.10 server=dhcp.example.org
 '''
 
 import json
@@ -87,7 +92,8 @@ except ImportError:
 def main():
     module = AnsibleModule(
         argument_spec = dict(
-            state   = dict(default=None, choices=['present', 'absent']),
+            state   = dict(default='present', choices=['present', 'absent']),
+            gather_facts = dict(default=None, choices=BOOLEANS),
             mac_address = dict(default=None, type='str'),
             ip_address = dict(default=None, type='str'),
             server = dict(required=True, type='str'),
@@ -99,7 +105,8 @@ def main():
                                 ['key_name', 'key_secret']
                             ],
         required_one_of = [
-                                ['mac_address', 'ip_address', 'state']
+                                ['mac_address', 'ip_address'].
+                                ['gather_facts', 'state']
                           ],
         supports_check_mode=False
     )
@@ -109,7 +116,7 @@ def main():
 
     if (module.params['state'] is None) or (module.params['state'] == 'absent'):
         if not ( (module.params['mac_address'] is not None) ^ (module.params['ip_address'] is not None) ):
-            module.fail_json(msg="state=absent or none requires exactly either one Hardware or one IP address")
+            module.fail_json(msg="state=absent or gather_facts=true require exactly either one Hardware or one IP address")
     if module.params['state'] == 'present':
         if not ( (module.params['mac_address'] is not None) and (module.params['ip_address'] is not None) ):
             module.fail_json(msg="state=present requires both an IP and a Hardware address")
@@ -120,7 +127,7 @@ def main():
         module.fail_json(msg="Error connecting to dhcp server")
 
     #if state is none then query dhcpd and return as facts
-    if module.params['state'] is None:
+    if module.boolean(module.params['gather_facts']):
         ansible_facts_dict = {
             "changed" : False,
             "ansible_facts": {
@@ -171,6 +178,8 @@ def main():
             module.exit_json(changed=False)
         except pypureomapi.OmapiError:
             module.fail_json(msg="Could not remove entry")
+
+    module.fail_json(msg="No action specified!")
 
 # import module snippets
 from ansible.module_utils.basic import *
