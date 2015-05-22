@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 #
 # Copyright (c) 2015 Vyronas Tsingaras <vtsingaras@it.auth.gr, Aristotle University of Thessaloniki
 #
@@ -23,49 +23,48 @@ module: dhcpd
 short_description: Simple module that sets/reads entries from an ISC-DHCP server
 description:
     - Module that interfaces with an ISC-DHCP server using OMAPI to add/remove host objects or lookup lease objects
-version_added: "0.0"
+version_added: "2.0"
 author: Vyronas Tsingaras
 requirements:
     - This module requires the Python pypureomapi module
     - You should have configured your dhcp server to enable OMAPI
 options:
-    option_name:
-        state:
+    state:
+        description:
             - If state is ommited then lookup a lease and return as a fact, else perform the respective operation
         required: false
         default: null
         choices: [present, absent]
-        version_added: 1.0
-        mac_address:
+    mac_address:
+        description:
             - Target MAC address, if ommited ip_address must be supplied
         required: false
         default: null
-        version_added: 1.0
-        ip_address:
+    ip_address:
+        description:
             - Target IPv4 address, if ommited mac_address must be supplied
         required: false
         default: null
-        version_added: 1.0
-        server:
+    server:
+        description:
             - IP or hostname of DHCP server
         required: true
         default: null
-        version_added: 1.0
-        port:
+    port:
+        description:
             - OMAPI DHCP port
         required: false
         default: 7911
-        version_added: 1.0
-        key_name:
+    key_name:
+        description:
             - OMAPI key name as specified in the omapi-key directive in dhcpd.conf
         required: false
         default: null
-        version_added: 1.0
-        key_secret:
+    key_secret:
+        description:
             - base64-encoded OMAPI key secret as specified in the "key $KEYNAME" stanza in dhcpd.conf
         required: false
         default: null
-        version_added: 1.0
 '''
 
 EXAMPLES = '''
